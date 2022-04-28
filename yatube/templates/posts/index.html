@@ -6,7 +6,7 @@
 {% block content %}
 
   {% for post in page_obj %}
-    {% include 'includes/post.html' %}
+    {% include 'includes/post.html' with show_group_link=True %}
   {% endfor %}
 
   {% include 'posts/includes/paginator.html' %}
