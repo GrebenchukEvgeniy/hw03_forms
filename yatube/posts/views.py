@@ -1,15 +1,15 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, redirect, render
+from users.models import User
 
 from .forms import PostForm
 from .models import Group, Post
-from .utils import my_paginator
+from .utils import paginate_page
 
 
 def index(request):
-    post_list = Post.objects.all()
-    page_obj = my_paginator(request, post_list)
+    post_list = Post.objects.select_related('group', 'author').all()
+    page_obj = paginate_page(request, post_list)
     context = {
         'page_obj': page_obj,
     }
@@ -19,7 +19,7 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     post_list = group.posts.all()
-    page_obj = my_paginator(request, post_list)
+    page_obj = paginate_page(request, post_list)
     context = {
         'page_obj': page_obj,
         'group': group,
@@ -29,8 +29,8 @@ def group_posts(request, slug):
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
-    post_list = author.posts.select_related()
-    page_obj = my_paginator(request, post_list)
+    post_list = author.posts.select_related('group')
+    page_obj = paginate_page(request, post_list)
     context = {
         'page_obj': page_obj,
         'author': author,
@@ -49,13 +49,13 @@ def post_detail(request, post_id):
 @login_required
 def post_create(request):
     form = PostForm(request.POST or None)
-    if form.is_valid():
-        post_create = form.save(commit=False)
-        post_create.author = request.user
-        post_create.save()
-        return redirect('posts:profile', username=request.user)
-    context = {'form': form}
-    return render(request, 'posts/create_post.html', context)
+    if not form.is_valid():
+        context = {'form': form}
+        return render(request, 'posts/create_post.html', context)
+    post_create = form.save(commit=False)
+    post_create.author = request.user
+    post_create.save()
+    return redirect('posts:profile', username=request.user)
 
 
 def post_edit(request, post_id):
