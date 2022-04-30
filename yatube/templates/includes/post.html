@@ -8,7 +8,7 @@
             Дата публикации: {{ post.pub_date|date:"d E Y" }}
         </li>
     </ul> 
-<p>{{ post.text }}</p>   
+<p>{{ post.text | linebreaksbr }}</p>   
  <a href="{% url 'posts:post_detail' post.pk %}">подробная информация</a>
 <p>
     {% if post.group and show_group_link %}  
